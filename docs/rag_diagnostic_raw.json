@@ -1,0 +1,168 @@
+[
+  {
+    "id": "P1",
+    "query": "What is your return policy?",
+    "expected": "Should retrieve from return_policy.md \u2014 tests synthetic doc",
+    "category": "policy_faq",
+    "results": [
+      {
+        "score": 0.4941,
+        "source": "return_policy.md",
+        "text_preview": "# Return Policy ## Return Window - Standard items: 30 days from the delivery date - Electronics (laptops, tablets, phones, audio equipment): 15 days from delivery date - Final sale items: clearly marked as \"Final Sale\" at checkout \u2014 not eligible for return or exchange ## Item Condition Requirements "
+      },
+      {
+        "score": 0.4032,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "# Table of Contents goods in an unlawful or unethical manner, violating the proprietary rights of others, or otherwise violating our policies. When these policies and processes are circumvented or fail to operate sufficiently, it can harm our business or damage our reputation and we could face civil"
+      },
+      {
+        "score": 0.3819,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "## Table of Contents terms, intellectual property rights of others, or our Supply Chain Standards, as well as products or practices regarded as unethical, unsafe, or hazardous, couldexpose us to claims, damage our reputation, limit our growth, and negatively affect our operating results. ### We Are "
+      },
+      {
+        "score": 0.3819,
+        "source": "shipping_policy.md",
+        "text_preview": "# Shipping Policy ## Standard Shipping - Delivery time: 5\u20137 business days - Free on orders over $50; $5.99 flat fee for orders under $50 - Available for all US domestic addresses including PO Boxes ## Expedited Shipping - Delivery time: 2\u20133 business days - Flat fee: $12.99 regardless of order size -"
+      }
+    ]
+  },
+  {
+    "id": "P2",
+    "query": "How many employees did Amazon have at the end of 2019?",
+    "expected": "Should retrieve Item 1 Employees section from 10-K page 4 (answer: 798,000)",
+    "category": "factual_specific",
+    "results": [
+      {
+        "score": 0.4653,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "# Table of Contents ## Content Creators We serve authors and independent publishers with Kindle Direct Publishing, an online service that lets independent authors and publishers choose a royalty option and make their books available in the Kindle Store, along with Amazon\u2019s own publishing arm, Amazon"
+      },
+      {
+        "score": 0.4652,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "## Table of Contents ### Available Information Our investor relations website is amazon.com/ir and we encourage investors to use it as a way of easily finding information about us. We promptly make available on this website, free of charge, the reports that we file or furnish with the Securities and"
+      },
+      {
+        "score": 0.4453,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "# Table of Contents ## AMAZON.COM, INC. ### PART I #### Item 1. Business This Annual Report on Form 10-K and the documents incorporated herein by reference contain forward-looking statements based on expectations, estimates, and projections as of the date of this filing. Actual results may differ ma"
+      }
+    ]
+  },
+  {
+    "id": "P3",
+    "query": "What were Amazon's net sales in 2019?",
+    "expected": "Should retrieve financial table from 10-K page 18 (answer: $280,522 million)",
+    "category": "tabular_data",
+    "results": [
+      {
+        "score": 0.4291,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "# Table of Contents ## AMAZON.COM, INC. FORM 10-K For the Fiscal Year Ended December 31, 2019 ## INDEX | Part | Item | Description | Page | |-|-|-|-| | PART I | Item 1. | Business | 3 | | | Item 1A. | Risk Factors | 6 | | | Item 1B. | Unresolved Staff Comments | 15 | | | Item 2. | Properties | 16 | "
+      },
+      {
+        "score": 0.4238,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "# Table of Contents ## AMAZON.COM, INC. ### PART I #### Item 1. Business This Annual Report on Form 10-K and the documents incorporated herein by reference contain forward-looking statements based on expectations, estimates, and projections as of the date of this filing. Actual results may differ ma"
+      },
+      {
+        "score": 0.4083,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "## Table of Contents ### Available Information Our investor relations website is amazon.com/ir and we encourage investors to use it as a way of easily finding information about us. We promptly make available on this website, free of charge, the reports that we file or furnish with the Securities and"
+      }
+    ]
+  },
+  {
+    "id": "P4",
+    "query": "What are Amazon's risks related to operations in China?",
+    "expected": "Should retrieve the PRC/India paragraph from Item 1A page 8",
+    "category": "targeted_semantic",
+    "results": [
+      {
+        "score": 0.5001,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "# Table of Contents - lower levels of use of the Internet; - lower levels of consumer spending and fewer opportunities for growth compared to the U.S.; - lower levels of credit card usage and increased payment risk; - difficulty in staffing, developing, and managing foreign operations as a result of"
+      },
+      {
+        "score": 0.469,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "## Table of Contents * our ability to retain and expand our network of sellers; * our ability to offer products on favorable terms, manage inventory, and fulfill orders; * the introduction of competitive stores, websites, products, services, price decreases, or improvements; * changes in usage or ad"
+      }
+    ]
+  },
+  {
+    "id": "P5",
+    "query": "What are the risks if Amazon cannot hire enough software engineers?",
+    "expected": "Should retrieve 'Loss of Key Senior Management' section from page 10",
+    "category": "targeted_semantic",
+    "results": [
+      {
+        "score": 0.4406,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "## Table of Contents * the potential impairment of customer and other relationships of the company we acquired or in which we invested or our own customers as a result of any integration of operations; * the difficulty of completing such transactions and achieving anticipated benefits within expecte"
+      },
+      {
+        "score": 0.4308,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "# Table of Contents although they did not have a material adverse effect on our operating results, there can be no assurance of a similar result in the future. Although we havedeveloped systems and processes that are designed to protect customer information and prevent such incidents, including syst"
+      },
+      {
+        "score": 0.4134,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "# Table of Contents - lower levels of use of the Internet; - lower levels of consumer spending and fewer opportunities for growth compared to the U.S.; - lower levels of credit card usage and increased payment risk; - difficulty in staffing, developing, and managing foreign operations as a result of"
+      }
+    ]
+  },
+  {
+    "id": "P6",
+    "query": "How does expedited shipping work?",
+    "expected": "Should retrieve from shipping_policy.md",
+    "category": "policy_faq",
+    "results": [
+      {
+        "score": 0.488,
+        "source": "shipping_policy.md",
+        "text_preview": "# Shipping Policy ## Standard Shipping - Delivery time: 5\u20137 business days - Free on orders over $50; $5.99 flat fee for orders under $50 - Available for all US domestic addresses including PO Boxes ## Expedited Shipping - Delivery time: 2\u20133 business days - Flat fee: $12.99 regardless of order size -"
+      },
+      {
+        "score": 0.3922,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "# Table of Contents ## AMAZON.COM, INC. ### PART I #### Item 1. Business This Annual Report on Form 10-K and the documents incorporated herein by reference contain forward-looking statements based on expectations, estimates, and projections as of the date of this filing. Actual results may differ ma"
+      },
+      {
+        "score": 0.3873,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "# Table of Contents - lower levels of use of the Internet; - lower levels of consumer spending and fewer opportunities for growth compared to the U.S.; - lower levels of credit card usage and increased payment risk; - difficulty in staffing, developing, and managing foreign operations as a result of"
+      },
+      {
+        "score": 0.38,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "## Table of Contents ### The Seasonality of Our Retail Business Places Increased Strain on Our Operations We expect a disproportionate amount of our retail sales to occur during our fourth quarter. Our failure to stock or restock popular products in sufficient amounts such that we fail to meet custo"
+      }
+    ]
+  },
+  {
+    "id": "P7",
+    "query": "material adverse effect",
+    "expected": "Ambiguous phrase \u2014 tests embedding collision on boilerplate. Will likely return many chunks, low precision.",
+    "category": "diagnostic_negative",
+    "results": [
+      {
+        "score": 0.4215,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "# Table of Contents proceedings can have an adverse effect on us because of legal costs, disruption of our operations, diversion of management resources, negative publicity, and otherfactors. The outcomes of these matters are inherently unpredictable and subject to significant uncertainties. Determi"
+      },
+      {
+        "score": 0.3773,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "## Table of Contents * the potential impairment of customer and other relationships of the company we acquired or in which we invested or our own customers as a result of any integration of operations; * the difficulty of completing such transactions and achieving anticipated benefits within expecte"
+      },
+      {
+        "score": 0.376,
+        "source": "Company-10k-18pages.pdf",
+        "text_preview": "## Table of Contents Our digital content offerings depend in part on effective digital rights management technology to control access to digital content. Breach or malfunctioning of the digital rights management technology that we use could subject us to claims, and content providers may be unwillin"
+      }
+    ]
+  }
+]
