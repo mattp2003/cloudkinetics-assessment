@@ -21,6 +21,7 @@ build/
 # AWS CDK
 cdk.out/
 cdk.context.json
+cdk/lambda_dist/
 
 # Testing
 .pytest_cache/
