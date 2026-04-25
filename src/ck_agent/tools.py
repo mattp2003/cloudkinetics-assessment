@@ -79,7 +79,13 @@ def check_order_status(
     dob_iso: str,
     selected_order_id: str | None = None,
 ) -> dict:
-    from ck_agent.verification import verify_user
+    from ck_agent.verification import verify_user, parse_dob
+
+    # Normalize DOB from any user-provided format to ISO YYYY-MM-DD
+    dob_parsed = parse_dob(dob_iso)
+    if not dob_parsed.ok:
+        return {"verified": False, "reason": f"Could not understand date of birth: {dob_parsed.reason}"}
+    dob_iso = dob_parsed.value
 
     result = verify_user(email=email, ssn_last4=ssn_last4, dob_iso=dob_iso)
     if not result.verified:
