@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import uuid
+from collections.abc import Generator
+from typing import Callable
 
 import boto3
 
@@ -101,3 +103,103 @@ class AgentSession:
             return "[agent error: unexpected stop reason]"
 
         return "[agent error: exceeded max tool iterations]"
+
+
+def run_agent_stream(
+    messages: list[dict],
+    save_message_fn: Callable[[dict], None] | None = None,
+) -> Generator[dict, None, None]:
+    """
+    Generator that drives the Bedrock converse_stream loop.
+
+    Yields:
+        {"type": "text_delta", "text": "..."}   — one token chunk
+        {"type": "tool_use_start", "name": "..."} — optional UI hint
+        {"type": "end"}                          — conversation turn complete
+    """
+    for _ in range(MAX_TOOL_ITERATIONS):
+        response = BEDROCK.converse_stream(
+            modelId=MODEL_ID,
+            messages=messages,
+            system=[{"text": SYSTEM_PROMPT}],
+            toolConfig=TOOL_CONFIG,
+            inferenceConfig={"temperature": 0.3, "maxTokens": 1024},
+        )
+
+        current_message: dict = {"role": "assistant", "content": []}
+        current_text = ""
+        current_tool: dict | None = None
+        current_tool_input_json = ""
+        stop_reason = None
+
+        for event in response["stream"]:
+            if "contentBlockStart" in event:
+                block_start = event["contentBlockStart"]["start"]
+                if "toolUse" in block_start:
+                    current_tool = {
+                        "toolUseId": block_start["toolUse"]["toolUseId"],
+                        "name": block_start["toolUse"]["name"],
+                    }
+                    yield {"type": "tool_use_start", "name": current_tool["name"]}
+
+            elif "contentBlockDelta" in event:
+                delta = event["contentBlockDelta"]["delta"]
+                if "text" in delta:
+                    current_text += delta["text"]
+                    yield {"type": "text_delta", "text": delta["text"]}
+                elif "toolUse" in delta:
+                    current_tool_input_json += delta["toolUse"].get("input", "")
+
+            elif "contentBlockStop" in event:
+                if current_text:
+                    current_message["content"].append({"text": current_text})
+                    current_text = ""
+                if current_tool is not None:
+                    try:
+                        parsed_input = json.loads(current_tool_input_json) if current_tool_input_json else {}
+                    except json.JSONDecodeError:
+                        parsed_input = {}
+                    current_message["content"].append({
+                        "toolUse": {
+                            "toolUseId": current_tool["toolUseId"],
+                            "name": current_tool["name"],
+                            "input": parsed_input,
+                        }
+                    })
+                    current_tool = None
+                    current_tool_input_json = ""
+
+            elif "messageStop" in event:
+                stop_reason = event["messageStop"]["stopReason"]
+
+        messages.append(current_message)
+        if save_message_fn:
+            save_message_fn(current_message)
+
+        if stop_reason == "end_turn":
+            yield {"type": "end"}
+            return
+
+        if stop_reason == "tool_use":
+            tool_results = []
+            for block in current_message["content"]:
+                if "toolUse" in block:
+                    tu = block["toolUse"]
+                    result = dispatch_tool(tu["name"], tu["input"])
+                    result_str = result if isinstance(result, str) else json.dumps(result)
+                    tool_results.append({
+                        "toolResult": {
+                            "toolUseId": tu["toolUseId"],
+                            "content": [{"text": result_str}],
+                        }
+                    })
+            tool_result_msg = {"role": "user", "content": tool_results}
+            messages.append(tool_result_msg)
+            if save_message_fn:
+                save_message_fn(tool_result_msg)
+            continue
+
+        yield {"type": "end"}
+        return
+
+    yield {"type": "end"}
