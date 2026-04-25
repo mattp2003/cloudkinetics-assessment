@@ -15,5 +15,10 @@ dev = [
     "ruff>=0.6.0",
 ]
 
+[tool.pytest.ini_options]
+markers = [
+    "integration: tests that make real AWS calls (deselect with -k 'not integration')",
+]
+
 [tool.ruff]
 line-length = 100
