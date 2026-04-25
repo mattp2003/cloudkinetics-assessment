@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CloudKinetics Agent Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a1a;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      background: #1a56db;
+      color: #fff;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.2);
+    }
+    header h1 { font-size: 1.1rem; font-weight: 600; letter-spacing: .3px; }
+    #status-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #ef4444; flex-shrink: 0; margin-left: auto;
+      transition: background .3s;
+    }
+    #status-dot.connected   { background: #22c55e; }
+    #status-dot.connecting  { background: #f59e0b; }
+    #status-label { font-size: .8rem; opacity: .85; min-width: 90px; text-align: right; }
+
+    .container {
+      width: 100%; max-width: 760px;
+      flex: 1; display: flex; flex-direction: column;
+      padding: 16px;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    /* connection bar */
+    .conn-bar {
+      display: flex; gap: 8px; align-items: center;
+    }
+    .conn-bar input {
+      flex: 1; padding: 8px 12px; border: 1px solid #d1d5db;
+      border-radius: 8px; font-size: .85rem; background: #fff;
+      outline: none;
+    }
+    .conn-bar input:focus { border-color: #1a56db; }
+    .btn {
+      padding: 8px 16px; border: none; border-radius: 8px;
+      font-size: .85rem; font-weight: 500; cursor: pointer;
+      transition: opacity .15s, background .15s;
+    }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-primary   { background: #1a56db; color: #fff; }
+    .btn-primary:hover:not(:disabled)   { background: #1648c0; }
+    .btn-danger    { background: #ef4444; color: #fff; }
+    .btn-danger:hover:not(:disabled)    { background: #dc2626; }
+
+    /* chat area */
+    #chat {
+      flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+      gap: 10px; padding: 4px 2px;
+    }
+
+    .bubble-row {
+      display: flex;
+      flex-direction: column;
+    }
+    .bubble-row.user  { align-items: flex-end; }
+    .bubble-row.agent { align-items: flex-start; }
+
+    .bubble {
+      max-width: 78%; padding: 10px 14px; border-radius: 18px;
+      line-height: 1.55; font-size: .92rem; white-space: pre-wrap; word-break: break-word;
+    }
+    .bubble-row.user  .bubble { background: #1a56db; color: #fff; border-bottom-right-radius: 4px; }
+    .bubble-row.agent .bubble { background: #fff; color: #1a1a1a; border-bottom-left-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+
+    .tool-hint {
+      font-size: .75rem; color: #6b7280; font-style: italic;
+      margin-top: 4px; padding-left: 4px;
+    }
+
+    /* typing dots */
+    .typing-dots { display: inline-flex; gap: 3px; align-items: center; padding: 2px 0; }
+    .typing-dots span {
+      width: 6px; height: 6px; border-radius: 50%; background: #9ca3af;
+      animation: bounce 1.2s infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: .2s; }
+    .typing-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40%           { transform: translateY(-5px); }
+    }
+
+    /* disconnect banner */
+    #disconnect-banner {
+      display: none; background: #fef2f2; border: 1px solid #fca5a5;
+      border-radius: 8px; padding: 8px 14px; font-size: .85rem; color: #b91c1c;
+      text-align: center;
+    }
+    #disconnect-banner.visible { display: block; }
+
+    /* input row */
+    .input-row {
+      display: flex; gap: 8px;
+    }
+    .input-row textarea {
+      flex: 1; resize: none; padding: 10px 14px; border: 1px solid #d1d5db;
+      border-radius: 12px; font-size: .92rem; font-family: inherit;
+      line-height: 1.4; outline: none; max-height: 120px;
+    }
+    .input-row textarea:focus { border-color: #1a56db; }
+    .input-row textarea:disabled { background: #f9fafb; }
+    #send-btn { align-self: flex-end; padding: 10px 20px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>CloudKinetics Agent Demo</h1>
+  <span id="status-label">Disconnected</span>
+  <span id="status-dot"></span>
+</header>
+
+<div class="container">
+  <div class="conn-bar">
+    <input id="wss-url" type="text"
+      value="wss://c8hc0sntgh.execute-api.ap-southeast-1.amazonaws.com/prod"
+      placeholder="wss://…" />
+    <button id="connect-btn"    class="btn btn-primary" onclick="connect()">Connect</button>
+    <button id="disconnect-btn" class="btn btn-danger"  onclick="disconnect()" disabled>Disconnect</button>
+  </div>
+
+  <div id="disconnect-banner">Connection lost. Refresh or reconnect.</div>
+
+  <div id="chat"></div>
+
+  <div class="input-row">
+    <textarea id="msg-input" rows="2" placeholder="Type a message…" disabled
+              onkeydown="handleKey(event)"></textarea>
+    <button id="send-btn" class="btn btn-primary" onclick="send()" disabled>Send</button>
+  </div>
+</div>
+
+<script>
+  let ws = null;
+  let currentAgentRow = null;   // the .bubble-row div being streamed into
+  let currentBubble   = null;   // the .bubble div
+  let currentToolHint = null;   // the .tool-hint div
+
+  /* ── connection ──────────────────────────────────────────── */
+
+  function connect() {
+    const url = document.getElementById('wss-url').value.trim();
+    if (!url) return;
+
+    setStatus('connecting');
+    ws = new WebSocket(url);
+
+    ws.onopen = () => {
+      setStatus('connected');
+      document.getElementById('disconnect-banner').classList.remove('visible');
+      document.getElementById('msg-input').disabled = false;
+      document.getElementById('send-btn').disabled  = false;
+      document.getElementById('connect-btn').disabled    = true;
+      document.getElementById('disconnect-btn').disabled = false;
+    };
+
+    ws.onmessage = (e) => {
+      try { handleEvent(JSON.parse(e.data)); }
+      catch (_) { /* ignore malformed frames */ }
+    };
+
+    ws.onerror = () => setStatus('disconnected');
+
+    ws.onclose = () => {
+      setStatus('disconnected');
+      document.getElementById('disconnect-banner').classList.add('visible');
+      document.getElementById('msg-input').disabled = true;
+      document.getElementById('send-btn').disabled  = true;
+      document.getElementById('connect-btn').disabled    = false;
+      document.getElementById('disconnect-btn').disabled = true;
+      finaliseCurrentBubble();
+    };
+  }
+
+  function disconnect() {
+    if (ws) ws.close();
+  }
+
+  /* ── sending ─────────────────────────────────────────────── */
+
+  function send() {
+    const input = document.getElementById('msg-input');
+    const text  = input.value.trim();
+    if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+    appendUserBubble(text);
+    ws.send(JSON.stringify({ message: text }));
+    input.value = '';
+    input.style.height = '';
+
+    // optimistic: start an agent bubble with typing indicator
+    startAgentBubble();
+    document.getElementById('send-btn').disabled = true;
+    input.disabled = true;
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  }
+
+  /* ── event handling ──────────────────────────────────────── */
+
+  function handleEvent(msg) {
+    switch (msg.type) {
+      case 'text_delta':
+        appendTextDelta(msg.text);
+        break;
+      case 'tool_use_start':
+        showToolHint(msg.name);
+        break;
+      case 'end':
+        finaliseCurrentBubble();
+        document.getElementById('send-btn').disabled = false;
+        document.getElementById('msg-input').disabled = false;
+        document.getElementById('msg-input').focus();
+        break;
+    }
+  }
+
+  /* ── DOM helpers ─────────────────────────────────────────── */
+
+  function appendUserBubble(text) {
+    const row = document.createElement('div');
+    row.className = 'bubble-row user';
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    b.textContent = text;
+    row.appendChild(b);
+    document.getElementById('chat').appendChild(row);
+    scrollToBottom();
+  }
+
+  function startAgentBubble() {
+    currentAgentRow = document.createElement('div');
+    currentAgentRow.className = 'bubble-row agent';
+
+    currentBubble = document.createElement('div');
+    currentBubble.className = 'bubble';
+    // typing indicator
+    currentBubble.innerHTML =
+      '<span class="typing-dots"><span></span><span></span><span></span></span>';
+
+    currentAgentRow.appendChild(currentBubble);
+    document.getElementById('chat').appendChild(currentAgentRow);
+    scrollToBottom();
+    currentToolHint = null;
+  }
+
+  function appendTextDelta(text) {
+    if (!currentBubble) startAgentBubble();
+
+    // remove typing dots on first real text
+    const dots = currentBubble.querySelector('.typing-dots');
+    if (dots) dots.remove();
+
+    // append as a text node to preserve whitespace correctly
+    currentBubble.appendChild(document.createTextNode(text));
+    scrollToBottom();
+  }
+
+  function showToolHint(toolName) {
+    if (!currentAgentRow) return;
+
+    // remove typing dots if still present
+    const dots = currentBubble && currentBubble.querySelector('.typing-dots');
+    if (dots) dots.remove();
+
+    const label = toolName === 'retrieve_knowledge'
+      ? '🔍 searching knowledge base…'
+      : toolName === 'check_order_status'
+        ? '🔐 checking order status…'
+        : `⚙️ calling ${toolName}…`;
+
+    if (currentToolHint) {
+      currentToolHint.textContent = label;
+    } else {
+      currentToolHint = document.createElement('div');
+      currentToolHint.className = 'tool-hint';
+      currentToolHint.textContent = label;
+      currentAgentRow.appendChild(currentToolHint);
+    }
+    scrollToBottom();
+  }
+
+  function finaliseCurrentBubble() {
+    // if the bubble is still showing only the typing indicator, replace with ellipsis
+    if (currentBubble) {
+      const dots = currentBubble.querySelector('.typing-dots');
+      if (dots && currentBubble.childNodes.length === 1) {
+        dots.remove();
+        currentBubble.textContent = '…';
+      }
+    }
+    currentAgentRow  = null;
+    currentBubble    = null;
+    currentToolHint  = null;
+  }
+
+  function scrollToBottom() {
+    const chat = document.getElementById('chat');
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  /* ── status ──────────────────────────────────────────────── */
+
+  function setStatus(state) {
+    const dot   = document.getElementById('status-dot');
+    const label = document.getElementById('status-label');
+    dot.className = state;
+    label.textContent = state.charAt(0).toUpperCase() + state.slice(1);
+  }
+
+  // auto-grow textarea
+  document.getElementById('msg-input').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+</script>
+</body>
+</html>
