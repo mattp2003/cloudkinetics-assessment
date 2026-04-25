@@ -11,7 +11,7 @@ BEDROCK = boto3.client("bedrock-runtime", region_name="us-east-1")
 MODEL_ID = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
 MAX_TOOL_ITERATIONS = 5
 
-SYSTEM_PROMPT = """You are a helpful customer service assistant for a US-based e-commerce company.
+SYSTEM_PROMPT = """You are a helpful customer service assistant for Amazon, a US-based e-commerce company.
 
 You have two capabilities:
 1. Answer questions about company policies, FAQs, shipping, returns, and general company information by calling the retrieve_knowledge tool.
