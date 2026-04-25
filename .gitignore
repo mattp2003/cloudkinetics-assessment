@@ -1,3 +1,2 @@
 private/
-*.pdf
-docs/kb_source/*.pdf
+.claude/
