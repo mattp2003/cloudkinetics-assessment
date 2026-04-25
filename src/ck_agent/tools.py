@@ -1,6 +1,11 @@
 import json
+import os
+
+import boto3
 
 from ck_agent.mock_data import User
+
+BEDROCK_AGENT_RUNTIME = boto3.client("bedrock-agent-runtime", region_name="us-east-1")
 
 RETRIEVE_KNOWLEDGE_TOOL = {
     "toolSpec": {
@@ -69,8 +74,34 @@ TOOL_CONFIG = {
 
 
 def retrieve_knowledge(query: str) -> str:
-    """Stub — replaced with Bedrock KB call in phase 05."""
-    return f"[STUB: knowledge lookup for '{query}' — will be wired to Bedrock KB in phase 05]"
+    """Retrieve relevant passages from the Bedrock Knowledge Base."""
+    kb_id = os.environ.get("BEDROCK_KB_ID", "")
+    if not kb_id:
+        return "[ERROR: BEDROCK_KB_ID not set in environment]"
+
+    response = BEDROCK_AGENT_RUNTIME.retrieve(
+        knowledgeBaseId=kb_id,
+        retrievalQuery={"text": query},
+        retrievalConfiguration={
+            "vectorSearchConfiguration": {
+                "numberOfResults": 5,
+                "overrideSearchType": "SEMANTIC",
+            }
+        },
+    )
+
+    results = response.get("retrievalResults", [])
+    if not results:
+        return "No relevant information found in the knowledge base for this query."
+
+    formatted = []
+    for i, r in enumerate(results, 1):
+        text = r["content"]["text"]
+        source = r.get("location", {}).get("s3Location", {}).get("uri", "unknown")
+        score = r.get("score", 0)
+        formatted.append(f"[{i}] (relevance: {score:.2f}, source: {source})\n{text}")
+
+    return "\n\n---\n\n".join(formatted)
 
 
 def check_order_status(

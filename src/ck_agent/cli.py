@@ -1,7 +1,20 @@
+import os
+from pathlib import Path
+
 from ck_agent.agent import AgentSession
 
 
+def _load_env():
+    env_path = Path(".env")
+    if env_path.exists():
+        for line in env_path.read_text().splitlines():
+            if "=" in line and not line.strip().startswith("#"):
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip())
+
+
 def main():
+    _load_env()
     print("CloudKinetics agent (local). Type 'quit' to exit.\n")
     session = AgentSession()
     while True:
