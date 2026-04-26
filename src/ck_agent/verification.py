@@ -55,13 +55,20 @@ def extract_ssn_last4(raw: str) -> FieldResult:
 
 def parse_dob(raw: str) -> FieldResult:
     """
-    Parse date of birth from any natural-language format using Bedrock.
+    Parse date of birth from any natural-language format.
     Returns ISO YYYY-MM-DD or an error reason.
 
+    Fast path: if the input is already YYYY-MM-DD, return it immediately
+    without calling Bedrock (keeps unit tests credential-free and saves latency).
+
+    Slow path: delegate to Bedrock for natural-language / ambiguous formats.
     We use an LLM here instead of dateutil/regex because users phrase dates
     wildly differently and ambiguous formats (05/01/1990) benefit from
     conversational context. Structured JSON output gives us type safety.
     """
+    if re.match(r"^\d{4}-\d{2}-\d{2}$", raw.strip()):
+        return FieldResult(ok=True, value=raw.strip())
+
     prompt = (
         "Extract the date of birth from the user's input below. "
         "Return ONLY a JSON object with this exact schema:\n"
