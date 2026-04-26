@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CloudKinetics Agent Demo</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -157,9 +158,10 @@
 
 <script>
   let ws = null;
-  let currentAgentRow = null;   // the .bubble-row div being streamed into
-  let currentBubble   = null;   // the .bubble div
-  let currentToolHint = null;   // the .tool-hint div
+  let currentAgentRow  = null;   // the .bubble-row div being streamed into
+  let currentBubble    = null;   // the .bubble div
+  let currentToolHint  = null;   // the .tool-hint div
+  let currentBubbleText = '';    // raw text accumulated for markdown rendering
 
   /* ── connection ──────────────────────────────────────────── */
 
@@ -268,7 +270,8 @@
     currentAgentRow.appendChild(currentBubble);
     document.getElementById('chat').appendChild(currentAgentRow);
     scrollToBottom();
-    currentToolHint = null;
+    currentToolHint  = null;
+    currentBubbleText = '';
   }
 
   function appendTextDelta(text) {
@@ -278,7 +281,8 @@
     const dots = currentBubble.querySelector('.typing-dots');
     if (dots) dots.remove();
 
-    // append as a text node to preserve whitespace correctly
+    // accumulate raw text; final render happens in finaliseCurrentBubble
+    currentBubbleText += text;
     currentBubble.appendChild(document.createTextNode(text));
     scrollToBottom();
   }
@@ -308,17 +312,21 @@
   }
 
   function finaliseCurrentBubble() {
-    // if the bubble is still showing only the typing indicator, replace with ellipsis
     if (currentBubble) {
       const dots = currentBubble.querySelector('.typing-dots');
       if (dots && currentBubble.childNodes.length === 1) {
+        // stream ended with no text at all
         dots.remove();
         currentBubble.textContent = '…';
+      } else if (currentBubbleText) {
+        // re-render accumulated text as markdown
+        currentBubble.innerHTML = marked.parse(currentBubbleText);
       }
     }
-    currentAgentRow  = null;
-    currentBubble    = null;
-    currentToolHint  = null;
+    currentAgentRow   = null;
+    currentBubble     = null;
+    currentToolHint   = null;
+    currentBubbleText = '';
   }
 
   function scrollToBottom() {
