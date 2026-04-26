@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test & Synth
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Python deps
+        run: pip install -e ".[dev]"
+
+      - name: Install CDK
+        run: |
+          npm install -g aws-cdk
+          pip install "aws-cdk-lib>=2.150.0" "constructs>=10.0.0"
+
+      - name: Lint
+        run: ruff check src tests
+
+      - name: Unit tests
+        run: pytest tests -v -m "not integration"
+
+      - name: Build lambda_dist
+        run: |
+          pip install boto3 pydantic python-dateutil -t cdk/lambda_dist/
+          cp -r src/ck_agent cdk/lambda_dist/
+
+      - name: CDK synth
+        working-directory: cdk
+        env:
+          BEDROCK_KB_ID: ${{ vars.BEDROCK_KB_ID }}
+          CDK_DEFAULT_ACCOUNT: "000000000000"
+          CDK_DEFAULT_REGION: "us-east-1"
+        run: cdk synth -c kb_id=$BEDROCK_KB_ID > /dev/null

@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write  # required for OIDC
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy CkAgentStack
+    runs-on: ubuntu-latest
+    needs: []  # runs in parallel with CI; both triggered by push to main
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::810977966580:role/GitHubActionsDeployRole
+          aws-region: us-east-1
+
+      - name: Install Python deps
+        run: pip install -e ".[dev]"
+
+      - name: Install CDK
+        run: |
+          npm install -g aws-cdk
+          pip install "aws-cdk-lib>=2.150.0" "constructs>=10.0.0"
+
+      - name: Build lambda_dist
+        run: |
+          pip install boto3 pydantic python-dateutil -t cdk/lambda_dist/
+          cp -r src/ck_agent cdk/lambda_dist/
+
+      - name: Deploy
+        working-directory: cdk
+        env:
+          BEDROCK_KB_ID: ${{ vars.BEDROCK_KB_ID }}
+        run: cdk deploy -c kb_id=$BEDROCK_KB_ID --require-approval never
