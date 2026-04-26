@@ -416,6 +416,9 @@
         currentBubble.innerHTML = marked.parse(currentBubbleText);
       }
     }
+    if (currentToolHint) {
+      currentToolHint.remove();
+    }
     currentAgentRow   = null;
     currentBubble     = null;
     currentToolHint   = null;
