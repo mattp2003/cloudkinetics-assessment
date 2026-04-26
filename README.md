@@ -47,7 +47,7 @@ Browser (WebSocket)
         ▼
 API Gateway WebSocket API
   $connect  ─────────────────────────────────────┐
-  $disconnect ─────────────────────────────────── │ ──► Lambda
+  $disconnect ───────────────────────────────────│ ──► Lambda
   $default  ─────────────────────────────────────┘    (ck-agent-handler)
                                                            │
                           ┌────────────────────────────────┤
@@ -56,12 +56,12 @@ API Gateway WebSocket API
                   session_store.py               agent.py + tools.py
                   (DynamoDB r/w)                 (Bedrock converse_stream)
                           │                                │
-               ┌──────────┤                    ┌──────────┤
-               ▼          ▼                    ▼          ▼
+               ┌──────────┤                     ┌──────────┤
+               ▼          ▼                     ▼          ▼
          ck-sessions  ck-conversations    retrieve_    check_order_
           (PK: conn)   (PK: conv, SK:     knowledge    status
                         MSG#ts#uuid)          │
-                                             ▼
+                                              ▼
                                     Bedrock Knowledge Base
                                     (S3 Vectors + Titan v2)
 ```
