@@ -1,7 +1,7 @@
 # RAG Retrieval Diagnostic
 
 **Run date:** 2026-04-26  
-**Knowledge Base ID:** Z5R2V3S1ZK  
+**Knowledge Base ID:** `<redacted>`  
 **Config:** Nova Pro 1.0 FM parsing + hierarchical chunking (parent 1500 / child 300 / overlap 60) + Amazon Titan Text Embeddings v2 + SEMANTIC search, top 5 results
 
 ---
