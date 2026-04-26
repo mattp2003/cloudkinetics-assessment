@@ -38,6 +38,7 @@ def get_or_create_session(connection_id: str) -> dict:
             "conversation_id": conversation_id,
             "messages": messages,
             "verification_state": item.get("verification_state", {}),
+            "user_id": item.get("user_id", "anonymous"),
         }
 
     conversation_id = str(uuid.uuid4())
@@ -74,6 +75,36 @@ def save_message(conversation_id: str, turn_number: int, message: dict, user_id:
         "user_id": user_id or "anonymous",
         "ttl": int(ts) + CONVERSATION_TTL_SECONDS,
     }))
+
+
+def update_session_user_id(connection_id: str, user_id: str) -> None:
+    """Persist the verified user's email against the session for future tagging."""
+    SESSIONS_TABLE.update_item(
+        Key={"connection_id": connection_id},
+        UpdateExpression="SET user_id = :uid",
+        ExpressionAttributeValues={":uid": user_id},
+    )
+
+
+def get_session_user_id(connection_id: str) -> str | None:
+    """Return the stored user_id for a connection, or None if not yet verified."""
+    resp = SESSIONS_TABLE.get_item(Key={"connection_id": connection_id}, ProjectionExpression="user_id")
+    return resp.get("Item", {}).get("user_id")
+
+
+def get_user_history(user_id: str, limit: int = 20) -> list[dict]:
+    """
+    Return the most recent messages for a verified user across all conversations.
+    Uses the by_user GSI for efficient per-user lookup.
+    """
+    resp = CONVERSATIONS_TABLE.query(
+        IndexName="by_user",
+        KeyConditionExpression="user_id = :uid",
+        ExpressionAttributeValues={":uid": user_id},
+        ScanIndexForward=False,  # newest first
+        Limit=limit,
+    )
+    return [json.loads(item["payload"]) for item in resp.get("Items", [])]
 
 
 def delete_session(connection_id: str) -> None:

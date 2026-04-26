@@ -11,6 +11,7 @@ from ck_agent.agent import run_agent_stream
 from ck_agent.session_store import (
     get_or_create_session,
     save_message,
+    update_session_user_id,
     delete_session,
 )
 
@@ -70,22 +71,50 @@ def _handle_message(event: dict, connection_id: str) -> dict:
     conversation_id = session["conversation_id"]
     messages: list[dict] = session["messages"]
 
+    # user_id may already be known from a previous verified turn
+    user_id_ref = [session.get("user_id", "anonymous")]
+
     user_msg = {"role": "user", "content": [{"text": user_text}]}
     messages.append(user_msg)
-    save_message(conversation_id, len(messages), user_msg)
+    save_message(conversation_id, len(messages), user_msg, user_id=user_id_ref[0])
 
     def _save(msg: dict) -> None:
-        save_message(conversation_id, len(messages), msg)
+        save_message(conversation_id, len(messages), msg, user_id=user_id_ref[0])
 
     for event in run_agent_stream(messages, save_message_fn=_save):
         _send(apigw, connection_id, event)
+
+    # After stream: detect newly verified user email and persist to session
+    detected = _extract_verified_email(messages)
+    if detected and user_id_ref[0] == "anonymous":
+        user_id_ref[0] = detected
+        update_session_user_id(connection_id, detected)
+        logger.info(json.dumps({"event": "user_verified", "user_id": detected, "conversation_id": conversation_id}))
 
     latency_ms = int((time.time() - start) * 1000)
     logger.info(json.dumps({
         "event": "turn_complete",
         "conversation_id": conversation_id,
         "connection_id": connection_id,
+        "user_id": user_id_ref[0],
         "latency_ms": latency_ms,
         "turn_number": len(messages),
     }))
     return {"statusCode": 200}
+
+
+def _extract_verified_email(messages: list[dict]) -> str | None:
+    """
+    Scan message history for a check_order_status tool call.
+    Returns the email argument if found, indicating the user went through verification.
+    """
+    for msg in messages:
+        if msg.get("role") != "assistant":
+            continue
+        for block in msg.get("content", []):
+            tu = block.get("toolUse", {})
+            if tu.get("name") == "check_order_status":
+                email = tu.get("input", {}).get("email", "")
+                if email:
+                    return email
+    return None
