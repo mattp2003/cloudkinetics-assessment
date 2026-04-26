@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import time
 import uuid
 from collections.abc import Generator
 from typing import Callable
@@ -8,6 +10,8 @@ from typing import Callable
 import boto3
 
 from ck_agent.tools import TOOL_CONFIG, dispatch_tool
+
+logger = logging.getLogger(__name__)
 
 BEDROCK = boto3.client("bedrock-runtime", region_name="us-east-1")
 MODEL_ID = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
@@ -108,6 +112,7 @@ class AgentSession:
 def run_agent_stream(
     messages: list[dict],
     save_message_fn: Callable[[dict], None] | None = None,
+    conversation_id: str = "",
 ) -> Generator[dict, None, None]:
     """
     Generator that drives the Bedrock converse_stream loop.
@@ -185,7 +190,31 @@ def run_agent_stream(
             for block in current_message["content"]:
                 if "toolUse" in block:
                     tu = block["toolUse"]
+                    tool_start = time.time()
                     result = dispatch_tool(tu["name"], tu["input"])
+                    tool_duration_ms = int((time.time() - tool_start) * 1000)
+
+                    logger.info(json.dumps({
+                        "event": "tool_invoked",
+                        "tool_name": tu["name"],
+                        "duration_ms": tool_duration_ms,
+                        "conversation_id": conversation_id,
+                    }))
+
+                    # Emit verification outcome for check_order_status calls
+                    if tu["name"] == "check_order_status":
+                        try:
+                            result_dict = json.loads(result) if isinstance(result, str) else result
+                            verified = result_dict.get("verified", False)
+                            logger.info(json.dumps({
+                                "event": "verification_attempt",
+                                "outcome": "success" if verified else "failure",
+                                "failure_reason": result_dict.get("reason", "") if not verified else "",
+                                "conversation_id": conversation_id,
+                            }))
+                        except Exception:
+                            pass
+
                     result_str = result if isinstance(result, str) else json.dumps(result)
                     tool_results.append({
                         "toolResult": {

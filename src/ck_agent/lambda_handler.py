@@ -81,7 +81,7 @@ def _handle_message(event: dict, connection_id: str) -> dict:
     def _save(msg: dict) -> None:
         save_message(conversation_id, len(messages), msg, user_id=user_id_ref[0])
 
-    for event in run_agent_stream(messages, save_message_fn=_save):
+    for event in run_agent_stream(messages, save_message_fn=_save, conversation_id=conversation_id):
         _send(apigw, connection_id, event)
 
     # After stream: detect newly verified user email and persist to session
