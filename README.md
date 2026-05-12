@@ -2,7 +2,7 @@
 
 A serverless, streaming AI customer service agent for a US-based e-commerce company. The agent answers questions from internal documents via RAG and performs identity-verified order status lookups over a real-time WebSocket connection.
 
-**Live demo:** https://mattp2003.github.io/cloudkinetics-assessment/
+**Live demo:** https://mattp2003.github.io/ck-agentic-rag/
 
 ---
 
