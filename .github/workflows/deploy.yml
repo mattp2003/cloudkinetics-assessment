@@ -1,8 +1,7 @@
 name: Deploy
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:  # manual-only — project torn down; trigger by hand from the Actions tab to redeploy
 
 permissions:
   id-token: write  # required for OIDC
